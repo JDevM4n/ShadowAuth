@@ -1,0 +1,5 @@
+role,system,permission,review_cycle
+platform-admin,authentication-api,administration,quarterly
+security-auditor,audit-logs,read-only,monthly
+directory-service,ldap-sync,service,quarterly
+backup-service,authentication-backups,write-only,quarterly

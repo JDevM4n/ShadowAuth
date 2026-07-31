@@ -1,0 +1,7 @@
+Banco Andino authentication backup schedule
+
+Incremental: every 6 hours
+Configuration snapshot: daily at 02:30
+Retention: 30 days
+Validation: every Sunday
+Owner: Platform Operations

@@ -1,0 +1,15 @@
+service:
+  name: banco-andino-auth
+  environment: production
+  bind_address: 127.0.0.1
+  port: 8443
+
+directory:
+  provider: ldap
+  sync_service: svc-ldap
+  base_dn: ou=employees,dc=banco-andino,dc=internal
+
+security:
+  audit_enabled: true
+  session_timeout_minutes: 15
+  certificate_path: /opt/banco-andino/auth/certs
