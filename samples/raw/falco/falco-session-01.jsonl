@@ -1,0 +1,23 @@
+{
+  "time": "2026-08-21T03:40:00Z",
+  "rule": "Terminal shell in container",
+  "priority": "Notice",
+  "hostname": "shadowauth-lab",
+  "source": "syscall",
+  "output": "A shell was spawned in a container",
+  "tags": [
+    "container",
+    "shell",
+    "mitre_execution"
+  ],
+  "output_fields": {
+    "evt.time": "2026-08-21T03:40:00Z",
+    "proc.name": "bash",
+    "proc.pid": 1234,
+    "user.name": "root",
+    "fd.sip": "172.17.0.2",
+    "fd.sport": 44321,
+    "fd.cip": "172.17.0.1",
+    "fd.cport": 22
+  }
+}
