@@ -19,4 +19,6 @@ extractor = SessionFeatureExtractor()
 
 features = extractor.extract(events)
 
+for event in events:
+    print(event.event_type)
 print(features)

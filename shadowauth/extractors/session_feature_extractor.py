@@ -31,17 +31,17 @@ class SessionFeatureExtractor(FeatureExtractor):
 
             session_id=first_event.session_id or "unknown",
 
-            duration_seconds=0,
+            duration_seconds=self._calculate_duration(events),
 
-            command_count=len(events),
+            command_count=self._count_commands(events),
 
             unique_command_count=0,
 
-            login_attempts=0,
+            login_attempts=self._count_login_attempts(events),
 
-            successful_login=False,
+            successful_login=self._successful_login(events),
 
-            download_count=0,
+            download_count=self._count_downloads(events),
 
             # ---------- Network ----------
 
@@ -77,4 +77,62 @@ class SessionFeatureExtractor(FeatureExtractor):
             session_hour=first_event.event_timestamp.hour,
 
             weekend=first_event.event_timestamp.weekday() >= 5,
+        )
+
+    def _count_commands(
+        self,
+        events: list[NormalizedEvent]
+    ) -> int:
+
+        return sum(
+            1
+            for event in events
+            if event.event_type == "cowrie.command.input"
+        )
+
+    def _count_login_attempts(
+        self,
+        events: list[NormalizedEvent]
+    ) -> int:
+
+        return sum(
+            1
+            for event in events
+            if event.event_type in (
+                "cowrie.login.failed",
+                "cowrie.login.success",
+            )
+        )
+
+    def _successful_login(
+        self,
+        events: list[NormalizedEvent]
+    ) -> bool:
+
+        return any(
+            event.event_type == "cowrie.login.success"
+            for event in events
+        )
+
+    def _count_downloads(
+        self,
+        events: list[NormalizedEvent]
+    ) -> int:
+
+        return sum(
+            1
+            for event in events
+            if event.event_type == "cowrie.session.file_download"
+        )
+
+    def _calculate_duration(
+        self,
+        events: list[NormalizedEvent]
+    ) -> int:
+
+        first = events[0].event_timestamp
+        last = events[-1].event_timestamp
+
+        return int(
+            (last - first).total_seconds()
         )
