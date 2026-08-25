@@ -16,5 +16,6 @@ class FeatureExtractor(ABC):
     def extract(
         self,
         events: list[NormalizedEvent],
+        label: str = "attack",
     ) -> FeatureVector:
         pass

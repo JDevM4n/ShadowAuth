@@ -166,5 +166,27 @@ class PostgresRepository:
                 )
 
             )
-
+        
         return events
+    
+    def get_all_sessions(self) -> list[str]:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+            """
+            SELECT DISTINCT session_id
+
+            FROM normalized_events
+
+            WHERE session_id IS NOT NULL
+
+            ORDER BY session_id
+            """
+        )
+
+            rows = cursor.fetchall()
+
+        return [row[0] for row in rows]
+
+        

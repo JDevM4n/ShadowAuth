@@ -50,3 +50,7 @@ class FeatureVector(BaseModel):
     session_hour: int
 
     weekend: bool
+
+    # ---------- Machine Learning ----------
+
+    label: str = "attack"
