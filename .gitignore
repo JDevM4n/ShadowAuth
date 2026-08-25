@@ -39,3 +39,8 @@ cowrie/var/lib/downloads/
 # SSH host keys generated locally
 cowrie/etc/*.pem
 cowrie/etc/*.key
+
+# ===============================
+# Environment variables
+# ===============================
+.env
