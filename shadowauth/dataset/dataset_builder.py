@@ -2,7 +2,9 @@ import csv
 from pathlib import Path
 
 from shadowauth.database.postgres_repository import PostgresRepository
-from shadowauth.extractors.session_feature_extractor import SessionFeatureExtractor
+from shadowauth.extractors.session_feature_extractor import (
+    SessionFeatureExtractor,
+)
 
 
 class DatasetBuilder:
@@ -28,7 +30,11 @@ class DatasetBuilder:
                 label="attack",
             )
 
-            dataset.append(features.model_dump())
+            feature_dict = features.model_dump()
+
+            feature_dict.pop("session_id", None)
+
+            dataset.append(feature_dict)
 
         return dataset
 
@@ -57,11 +63,8 @@ class DatasetBuilder:
         ) as csv_file:
 
             writer = csv.DictWriter(
-
                 csv_file,
-
-                fieldnames=dataset[0].keys()
-
+                fieldnames=dataset[0].keys(),
             )
 
             writer.writeheader()
