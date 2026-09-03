@@ -1,89 +1,84 @@
 # ShadowAuth
 
-> 🚧 **Project Status:** Active Development
+> 🚧 **Status:** Active Research & Development
 
-ShadowAuth is an open-source modular cybersecurity platform focused on early ransomware and cryptojacking detection through customized honeypots, behavioral analytics, and Machine Learning.
+ShadowAuth is an open-source modular cybersecurity platform focused on the early detection of ransomware and cryptojacking through customized honeypots, behavioral analytics, event correlation, and Machine Learning.
 
-The platform simulates realistic banking and financial environments to capture attacker behavior, generate high-quality security datasets, and support intelligent threat detection.
+The project captures real attacker activity from the Internet, normalizes heterogeneous security events, and generates high-quality datasets for intelligent threat detection.
 
 ---
 
 # Overview
 
-ShadowAuth is designed to reproduce realistic cyberattack scenarios while collecting valuable telemetry for security research and defensive engineering.
+ShadowAuth is the implementation platform for the **M4N Sentinel** research project.
 
-Rather than being a single application, ShadowAuth is composed of multiple independent modules that can operate separately while integrating into a complete cybersecurity platform.
+The platform is designed to simulate realistic financial infrastructures, collect attacker telemetry, normalize security events, engineer behavioral features, and train Machine Learning models capable of detecting advanced cyber threats.
 
-This repository serves as the implementation platform for **M4N Sentinel**, a research project focused on the early detection of ransomware and cryptojacking attacks through behavioral analysis and Machine Learning.
+Rather than being a single application, ShadowAuth is composed of independent but integrated modules that progressively build a complete behavioral detection platform.
 
 ---
 
 # Vision
 
-ShadowAuth aims to become a modular cybersecurity platform capable of:
+ShadowAuth aims to become an open cybersecurity platform capable of:
 
-- Simulating realistic enterprise infrastructures.
-- Capturing attacker behavior using customized honeypots.
-- Enriching and normalizing security events.
+- Deploying realistic financial honeypots.
+- Capturing real attacker behavior.
+- Collecting host telemetry.
+- Normalizing heterogeneous security events.
 - Building high-quality Machine Learning datasets.
-- Detecting advanced threats through intelligent behavioral models.
-- Providing educational value for cybersecurity practitioners and researchers.
+- Detecting ransomware and cryptojacking through behavioral analysis.
+- Correlating security events across multiple sources.
+- Providing educational value for cybersecurity research.
 
 ---
 
 # Objectives
 
-- Deploy realistic high-interaction honeypots.
-- Capture real attacker interactions.
-- Normalize and enrich security events.
-- Build high-quality datasets for Machine Learning.
-- Visualize attacks through dashboards and geolocation.
-- Detect ransomware and cryptojacking attacks.
-- Correlate security events.
-- Generate intelligent alerts.
-- Support cybersecurity research and education.
+- Deploy customized high-interaction honeypots.
+- Capture real attacker sessions from the Internet.
+- Normalize events from multiple sources.
+- Correlate attacker activity.
+- Generate reproducible security datasets.
+- Engineer behavioral features.
+- Train Machine Learning models.
+- Detect malicious behavior.
+- Generate intelligent security alerts.
 
 ---
 
 # High-Level Architecture
 
 ```text
-                        Internet
-                            │
-                            ▼
-                 ShadowAuth Honeypot
-                  (Customized Cowrie)
-                            │
-                            ▼
-                 Event Collection Pipeline
-                            │
-                            ▼
-                  Event Normalization
-                            │
-                            ▼
-               GeoIP & Threat Enrichment
-                            │
-                            ▼
-          Storage (Wazuh / OpenSearch)
-                     │
-          ┌──────────┴──────────┐
-          ▼                     ▼
- Security Dashboard      Dataset Builder
-                                │
-                                ▼
-                    Feature Engineering
-                                │
-                                ▼
-                     Machine Learning
-                                │
-                                ▼
-                    Threat Correlation
-                                │
-                                ▼
-                  M4N Sentinel Engine
-                                │
-                                ▼
-                      Intelligent Alerts
+                    Internet
+                        │
+                        ▼
+            Customized Cowrie Honeypot
+                        │
+         ┌──────────────┴──────────────┐
+         ▼                             ▼
+   Cowrie JSON Logs             Falco Events
+         │                             │
+         ▼                             ▼
+      Cowrie Parser             Falco Parser
+         └──────────────┬──────────────┘
+                        ▼
+                 Event Normalizer
+                        │
+                        ▼
+                  PostgreSQL Storage
+                        │
+                        ▼
+              Session Feature Extraction
+                        │
+                        ▼
+                Machine Learning Engine
+                        │
+                        ▼
+               Threat Correlation Engine
+                        │
+                        ▼
+           Dashboard & Intelligent Alerts
 ```
 
 ---
@@ -93,91 +88,138 @@ ShadowAuth aims to become a modular cybersecurity platform capable of:
 ```text
 ShadowAuth/
 │
-├── cowrie/              # Customized SSH Honeypot
+├── cowrie/              # Customized SSH honeypot
 ├── normalizer/          # Event normalization
-├── dashboard/           # Security dashboards
-├── ml/                  # Machine Learning models
+├── parsers/             # Event parsers
+├── ml/                  # Machine Learning
+├── dashboard/           # Visualization
+├── datasets/            # Generated datasets
 ├── docs/                # Technical documentation
 ├── screenshots/         # Demonstrations
-├── datasets/            # Generated datasets
 ├── scripts/             # Helper scripts
 └── README.md
 ```
 
 ---
 
+# Quick Start
+
+Clone the repository:
+
+```bash
+git clone https://github.com/JDevM4n/ShadowAuth.git
+cd ShadowAuth/cowrie
+```
+
+Configure the honeypot:
+
+```bash
+bash shadowauth/setup.sh
+```
+
+Create the virtual environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Install Cowrie:
+
+```bash
+pip install -U pip setuptools setuptools-scm wheel
+pip install -e .
+```
+
+Start the honeypot:
+
+```bash
+python -m cowrie.scripts.cowrie start
+```
+
+Check status:
+
+```bash
+python -m cowrie.scripts.cowrie status
+```
+
+---
+
+# Current Features
+
+## Honeypot
+
+- ✅ Customized Cowrie SSH honeypot
+- ✅ Banco Andino financial environment
+- ✅ Realistic banking filesystem
+- ✅ Fake authentication infrastructure
+- ✅ SSH banner customization
+- ✅ Internet deployment
+- ✅ Real attacker telemetry collection
+- ✅ JSON session logging
+- ✅ Reproducible installation
+
+---
+
 # Development Roadmap
 
-## Phase 1 — Customized Honeypot
+## Phase 1 — Financial Honeypot
 
 - [x] Clone Cowrie from source
-- [x] Create isolated Python environment
-- [x] Install in editable mode
-- [x] Initialize Cowrie
-- [x] First local SSH connection
-- [x] Verify event logging
-- [ ] Financial environment customization
-- [ ] Fake users and realistic filesystem
-- [ ] SSH banner customization
+- [x] Editable installation
+- [x] Banco Andino customization
+- [x] Financial filesystem
+- [x] SSH customization
+- [x] Internet deployment
+- [x] Real attack collection
+- [x] Reproducible installation
 
 ---
 
 ## Phase 2 — Event Processing
 
-- [ ] Log extraction
+- [x] Session logging
+- [ ] Cowrie parser
+- [ ] Falco integration
+- [ ] Falco parser
 - [ ] Event normalization
-- [ ] GeoIP integration
-- [ ] Threat enrichment
-- [ ] Event standardization
+- [ ] Event enrichment
 
 ---
 
-## Phase 3 — Security Visualization
+## Phase 3 — Data Platform
 
-- [ ] Dashboard
-- [ ] Attack statistics
-- [ ] World attack map
-- [ ] Country analysis
-- [ ] Credential analytics
-- [ ] Session visualization
-
----
-
-## Phase 4 — Data Engineering
-
+- [ ] PostgreSQL integration
+- [ ] Event persistence
 - [ ] Dataset generation
-- [ ] Data validation
+- [ ] Feature extraction
+
+---
+
+## Phase 4 — Machine Learning
+
 - [ ] Feature engineering
-- [ ] Label generation
-- [ ] Data preprocessing
-
----
-
-## Phase 5 — Machine Learning
-
 - [ ] Model training
-- [ ] Behavioral classification
-- [ ] Threat detection
+- [ ] Behavioral detection
 - [ ] Model evaluation
-- [ ] Performance metrics
 
 ---
 
-## Phase 6 — Threat Correlation
+## Phase 5 — Threat Correlation
 
 - [ ] Event correlation
 - [ ] Risk scoring
 - [ ] Detection engine
-- [ ] Rule integration
+- [ ] Intelligent alerts
 
 ---
 
-## Phase 7 — M4N Sentinel Integration
+## Phase 6 — Visualization
 
-- [ ] Complete platform integration
-- [ ] Intelligent alert generation
-- [ ] End-to-end validation
-- [ ] Final documentation
+- [ ] Dashboard
+- [ ] Attack statistics
+- [ ] Geolocation
+- [ ] Session analytics
 
 ---
 
@@ -186,13 +228,14 @@ ShadowAuth/
 ## Cybersecurity
 
 - Cowrie
-- Wazuh
-- OpenSearch
-- GeoIP
+- Falco
+- OpenSearch *(planned)*
+- Wazuh *(planned)*
 
-## Programming
+## Backend
 
 - Python
+- PostgreSQL
 - Bash
 
 ## Machine Learning
@@ -213,35 +256,19 @@ ShadowAuth/
 
 ---
 
-# Current Module
-
-**Phase 1 — Customized Cowrie Honeypot**
-
-Current progress:
-
-- ✅ Source installation
-- ✅ Virtual environment
-- ✅ Editable installation
-- ✅ Initial configuration
-- ✅ Local deployment
-- ✅ Event collection
-- 🚧 Financial environment customization
-
----
-
 # Design Philosophy
 
-ShadowAuth follows an engineering-first and educational approach.
+ShadowAuth follows an engineering-first approach.
 
 Every module is:
 
 - Built from source whenever possible.
-- Documented in detail.
+- Fully documented.
 - Understood before customization.
-- Designed to operate independently.
-- Integrated progressively into the complete platform.
+- Independently testable.
+- Progressively integrated into the complete platform.
 
-The objective is not only to build a functional cybersecurity solution but also to understand, document, and explain the internal operation of every component.
+The objective is not only to build a cybersecurity platform, but also to understand and document every internal component involved in modern threat detection.
 
 ---
 
@@ -249,37 +276,41 @@ The objective is not only to build a functional cybersecurity solution but also 
 
 ShadowAuth is the implementation platform for the **M4N Sentinel** research project.
 
-The research focuses on the early detection of ransomware and cryptojacking attacks through:
+The research investigates the early detection of ransomware and cryptojacking through:
 
-- Honeypots
-- Behavioral analytics
-- Event correlation
+- Customized honeypots
+- Host telemetry
+- Event normalization
+- Behavioral feature engineering
 - Machine Learning
-
-The platform will progressively evolve as each research module is implemented.
+- Threat correlation
 
 ---
 
 # Current Status
 
-🚧 Active Development
+🚧 **Active Development**
 
-The repository is currently focused on building a customized financial honeypot that will serve as the primary data source for the remaining modules.
+Current milestone:
 
-Future updates will progressively incorporate event normalization, dashboards, Machine Learning models, and intelligent threat detection.
+- ✅ Financial SSH honeypot operational
+- ✅ Capturing real attacker telemetry from the Internet
+- 🚧 Integrating Falco
+- 🚧 Building the event normalization pipeline
+- 🚧 PostgreSQL persistence layer
+- 🚧 Feature engineering
+- 🚧 Behavioral Machine Learning
 
 ---
 
 # Contributing
 
-At this stage the project is under active research and development.
+The project is currently under active research and development.
 
-Contributions, ideas, discussions, and technical feedback are welcome once the first stable version is released.
+Bug reports, discussions, ideas, and technical feedback are welcome.
 
 ---
 
 # License
 
-The project is currently under development.
-
-An open-source license will be added before the first public stable release.
+An open-source license will be added before the first stable release.
