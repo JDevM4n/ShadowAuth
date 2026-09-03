@@ -13,6 +13,17 @@ echo "[*] Configuring ShadowAuth honeypot..."
 # Create configuration directory
 mkdir -p "$ROOT_DIR/etc"
 
+#############################################
+# Create runtime directories
+#############################################
+
+mkdir -p "$ROOT_DIR/var/log/cowrie"
+mkdir -p "$ROOT_DIR/var/run"
+mkdir -p "$ROOT_DIR/var/lib/cowrie"
+mkdir -p "$ROOT_DIR/var/lib/cowrie/tty"
+mkdir -p "$ROOT_DIR/var/lib/cowrie/downloads"
+mkdir -p "$ROOT_DIR/var/state"
+
 # Create cowrie.cfg from the default template if it doesn't exist
 if [ ! -f "$CFG" ]; then
     cp "$DIST" "$CFG"
