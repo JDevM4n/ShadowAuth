@@ -47,6 +47,18 @@ def test_dataset_builder(
 
             return events
 
+        def get_session_label(
+            self,
+            requested_session_id,
+        ):
+
+            assert (
+                requested_session_id
+                == session_id
+            )
+
+            return "attack"
+
     monkeypatch.setattr(
         dataset_builder_module,
         "PostgresRepository",
@@ -81,7 +93,7 @@ def test_dataset_builder(
         <= row["command_count"]
     )
 
-    assert row["label"] == "unlabeled"
+    assert row["label"] == "attack"
 
     output_file = (
         tmp_path / "dataset.csv"

@@ -68,6 +68,8 @@ class PostgresRepository:
                 )
 
                 ON CONFLICT (event_id) DO NOTHING
+
+                RETURNING event_id
                 """,
                 (
                     event.event_id,
@@ -84,15 +86,122 @@ class PostgresRepository:
                     event.severity,
                     event.severity_native,
                     event.label,
-                    Jsonb(event.network.model_dump()),
-                    Jsonb(event.host.model_dump()),
-                    Jsonb(event.enrichment.model_dump()),
-                    Jsonb(event.data),
-                    Jsonb(json.loads(event.raw_log)),
+                    Jsonb(
+                        event.network.model_dump()
+                    ),
+                    Jsonb(
+                        event.host.model_dump()
+                    ),
+                    Jsonb(
+                        event.enrichment.model_dump()
+                    ),
+                    Jsonb(
+                        event.data
+                    ),
+                    (
+                        Jsonb(
+                            json.loads(
+                                event.raw_log
+                            )
+                        )
+                        if event.raw_log
+                        else None
+                    ),
                 ),
             )
 
+            inserted_event = cursor.fetchone()
+
+            # Only update/create the session when the
+            # normalized event was actually inserted.
+            #
+            # This prevents event_count from increasing
+            # when the same event is imported again.
+            if (
+                inserted_event
+                and event.session_id
+            ):
+
+                self._upsert_session(
+                    cursor=cursor,
+                    event=event,
+                )
+
         self.connection.commit()
+
+    def _upsert_session(
+        self,
+        cursor,
+        event: NormalizedEvent,
+    ) -> None:
+
+        cursor.execute(
+            """
+            INSERT INTO sessions (
+
+                session_id,
+                sources,
+                first_event_timestamp,
+                last_event_timestamp,
+                event_count,
+                label,
+                data_origin
+
+            )
+
+            VALUES (
+
+                %s,
+                ARRAY[%s]::TEXT[],
+                %s,
+                %s,
+                1,
+                'unlabeled',
+                'unknown'
+
+            )
+
+            ON CONFLICT (session_id)
+
+            DO UPDATE SET
+
+                sources = CASE
+
+                    WHEN %s = ANY(sessions.sources)
+                        THEN sessions.sources
+
+                    ELSE array_append(
+                        sessions.sources,
+                        %s
+                    )
+
+                END,
+
+                first_event_timestamp = LEAST(
+                    sessions.first_event_timestamp,
+                    EXCLUDED.first_event_timestamp
+                ),
+
+                last_event_timestamp = GREATEST(
+                    sessions.last_event_timestamp,
+                    EXCLUDED.last_event_timestamp
+                ),
+
+                event_count = (
+                    sessions.event_count + 1
+                ),
+
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                event.session_id,
+                event.source,
+                event.event_timestamp,
+                event.event_timestamp,
+                event.source,
+                event.source,
+            ),
+        )
 
     def get_session(
         self,
@@ -131,7 +240,9 @@ class PostgresRepository:
 
                 ORDER BY event_timestamp
                 """,
-                (session_id,),
+                (
+                    session_id,
+                ),
             )
 
             rows = cursor.fetchall()
@@ -142,55 +253,73 @@ class PostgresRepository:
 
             events.append(
                 NormalizedEvent(
-                    event_id=str(row[0]),
-
+                    event_id=str(
+                        row[0]
+                    ),
                     schema_version=row[1],
-
                     source=row[2],
-
                     event_type=row[3],
-
                     rule_id=row[4],
-
                     rule_name=row[5],
-
                     mitre_technique=row[6],
-
                     event_timestamp=row[7],
-
                     ingest_timestamp=row[8],
-
                     session_id=row[9],
-
                     native_uid=row[10],
-
                     severity=row[11],
-
                     severity_native=row[12],
-
                     label=row[13],
-
                     network=NetworkInfo(
                         **row[14]
                     ),
-
                     host=HostInfo(
                         **row[15]
                     ),
-
                     enrichment=EnrichmentInfo(
                         **row[16]
                     ),
-
                     data=row[17],
-
-                    raw_log=json.dumps(
-                        row[18]
+                    raw_log=(
+                        json.dumps(
+                            row[18]
+                        )
+                        if row[18] is not None
+                        else None
                     ),
                 )
             )
 
         return events
+
+    def get_session_label(
+        self,
+        session_id: str,
+    ) -> str:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT label
+
+                FROM sessions
+
+                WHERE session_id = %s
+                """,
+                (
+                    session_id,
+                ),
+            )
+
+            row = cursor.fetchone()
+
+        if row is None:
+            return "unlabeled"
+
+        return (
+            row[0]
+            or "unlabeled"
+        )
 
     def get_all_sessions(
         self,
@@ -200,11 +329,9 @@ class PostgresRepository:
 
             cursor.execute(
                 """
-                SELECT DISTINCT session_id
+                SELECT session_id
 
-                FROM normalized_events
-
-                WHERE session_id IS NOT NULL
+                FROM sessions
 
                 ORDER BY session_id
                 """
