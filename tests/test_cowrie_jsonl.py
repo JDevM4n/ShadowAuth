@@ -7,7 +7,7 @@ from shadowauth.parsers.cowrie_parser import CowrieParser
 parser = CowrieParser()
 
 with open(
-    "samples/raw/controlled-session-01.jsonl",
+    "samples/raw/cowrie/controlled-session-01.jsonl",
     "r",
     encoding="utf-8"
 ) as file:

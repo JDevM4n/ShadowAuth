@@ -4,7 +4,7 @@ from shadowauth.collectors.event_collector import EventCollector
 from shadowauth.parsers.cowrie_parser import CowrieParser
 
 
-with open("samples/raw/controlled-session-01.jsonl") as file:
+with open("samples/raw/cowrie/controlled-session-01.jsonl") as file:
 
     first_line = file.readline()
 
