@@ -27,20 +27,55 @@ REQUIRED_COLUMNS = [
 ]
 
 
+VALID_LABELS = {
+    "attack",
+    "benign",
+    "unlabeled",
+}
+
+
+TRAINING_LABELS = {
+    "attack",
+    "benign",
+}
+
+
 class DatasetValidator:
     """
-    Validates datasets before they are used for
-    Machine Learning training.
+    Validates ShadowAuth datasets.
+
+    Modes:
+
+    master:
+        Allows attack, benign and unlabeled sessions.
+
+    training:
+        Only allows sessions with supervised
+        ground-truth labels: attack and benign.
     """
 
     def __init__(
         self,
         dataset_path: str,
+        mode: str = "training",
+        minimum_samples: int = 20,
     ):
+
+        if mode not in {
+            "master",
+            "training",
+        }:
+            raise ValueError(
+                "mode must be 'master' or 'training'"
+            )
 
         self.dataset_path = Path(
             dataset_path
         )
+
+        self.mode = mode
+
+        self.minimum_samples = minimum_samples
 
         self.dataset = pd.read_csv(
             self.dataset_path
@@ -79,10 +114,17 @@ class DatasetValidator:
 
     def validate_session_ids(self) -> bool:
 
-        if "session_id" not in self.dataset.columns:
+        if (
+            "session_id"
+            not in self.dataset.columns
+        ):
             return False
 
-        if self.dataset["session_id"].isnull().any():
+        if (
+            self.dataset["session_id"]
+            .isnull()
+            .any()
+        ):
             return False
 
         return (
@@ -94,16 +136,31 @@ class DatasetValidator:
 
     def validate_labels(self) -> bool:
 
-        if "label" not in self.dataset.columns:
-            return False
-
-        if self.dataset["label"].isnull().any():
+        if (
+            "label"
+            not in self.dataset.columns
+        ):
             return False
 
         if (
             self.dataset["label"]
-            .eq("unlabeled")
+            .isnull()
             .any()
+        ):
+            return False
+
+        labels = set(
+            self.dataset["label"].unique()
+        )
+
+        if self.mode == "master":
+
+            return labels.issubset(
+                VALID_LABELS
+            )
+
+        if not labels.issubset(
+            TRAINING_LABELS
         ):
             return False
 
@@ -157,19 +214,41 @@ class DatasetValidator:
 
     def validate_sample_count(
         self,
-        minimum: int = 20,
     ) -> bool:
 
         return (
             len(self.dataset)
-            >= minimum
+            >= self.minimum_samples
+        )
+
+    def is_ready(self) -> bool:
+
+        return all(
+            [
+                self.validate_columns(),
+                self.validate_nulls(),
+                self.validate_session_ids(),
+                self.validate_ranges(),
+                self.validate_labels(),
+                self.validate_sample_count(),
+            ]
         )
 
     def generate_report(self) -> None:
 
         print("=" * 60)
-        print("SHADOWAUTH DATASET VALIDATION REPORT")
+        print(
+            "SHADOWAUTH DATASET VALIDATION REPORT"
+        )
         print("=" * 60)
+
+        print(
+            f"Mode: {self.mode}"
+        )
+
+        print(
+            f"Dataset: {self.dataset_path}"
+        )
 
         print(
             f"Rows: {len(self.dataset)}"
@@ -180,34 +259,49 @@ class DatasetValidator:
         )
 
         print(
-            f"Columns valid: {self.validate_columns()}"
+            f"Columns valid: "
+            f"{self.validate_columns()}"
         )
 
         print(
-            f"Null values valid: {self.validate_nulls()}"
+            f"Null values valid: "
+            f"{self.validate_nulls()}"
         )
 
         print(
-            f"Session IDs valid: {self.validate_session_ids()}"
+            f"Session IDs valid: "
+            f"{self.validate_session_ids()}"
         )
 
         print(
-            f"Ranges valid: {self.validate_ranges()}"
+            f"Ranges valid: "
+            f"{self.validate_ranges()}"
         )
 
         print(
-            f"Minimum samples reached: "
+            f"Labels valid: "
+            f"{self.validate_labels()}"
+        )
+
+        print(
+            f"Minimum samples "
+            f"({self.minimum_samples}) reached: "
             f"{self.validate_sample_count()}"
         )
 
         print(
-            f"Supervised labels valid: "
-            f"{self.validate_labels()}"
+            f"Dataset ready: "
+            f"{self.is_ready()}"
         )
 
-        if "label" in self.dataset.columns:
+        if (
+            "label"
+            in self.dataset.columns
+        ):
 
-            print("\nClass distribution:")
+            print(
+                "\nClass distribution:"
+            )
 
             print(
                 self.dataset["label"]
