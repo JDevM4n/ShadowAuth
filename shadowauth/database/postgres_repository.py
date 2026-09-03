@@ -10,6 +10,7 @@ from shadowauth.models.host_info import HostInfo
 from shadowauth.models.network_info import NetworkInfo
 from shadowauth.models.normalized_event import NormalizedEvent
 
+
 load_dotenv()
 
 
@@ -65,6 +66,8 @@ class PostgresRepository:
                     %s,%s,%s,%s,%s
 
                 )
+
+                ON CONFLICT (event_id) DO NOTHING
                 """,
                 (
                     event.event_id,
@@ -138,55 +141,78 @@ class PostgresRepository:
         for row in rows:
 
             events.append(
-
                 NormalizedEvent(
-
                     event_id=str(row[0]),
+
                     schema_version=row[1],
+
                     source=row[2],
+
                     event_type=row[3],
+
                     rule_id=row[4],
+
                     rule_name=row[5],
+
                     mitre_technique=row[6],
+
                     event_timestamp=row[7],
+
                     ingest_timestamp=row[8],
+
                     session_id=row[9],
+
                     native_uid=row[10],
+
                     severity=row[11],
+
                     severity_native=row[12],
+
                     label=row[13],
 
-                    network=NetworkInfo(**row[14]),
-                    host=HostInfo(**row[15]),
-                    enrichment=EnrichmentInfo(**row[16]),
+                    network=NetworkInfo(
+                        **row[14]
+                    ),
+
+                    host=HostInfo(
+                        **row[15]
+                    ),
+
+                    enrichment=EnrichmentInfo(
+                        **row[16]
+                    ),
 
                     data=row[17],
-                    raw_log=json.dumps(row[18]),
 
+                    raw_log=json.dumps(
+                        row[18]
+                    ),
                 )
-
             )
-        
+
         return events
-    
-    def get_all_sessions(self) -> list[str]:
+
+    def get_all_sessions(
+        self,
+    ) -> list[str]:
 
         with self.connection.cursor() as cursor:
 
             cursor.execute(
-            """
-            SELECT DISTINCT session_id
+                """
+                SELECT DISTINCT session_id
 
-            FROM normalized_events
+                FROM normalized_events
 
-            WHERE session_id IS NOT NULL
+                WHERE session_id IS NOT NULL
 
-            ORDER BY session_id
-            """
-        )
+                ORDER BY session_id
+                """
+            )
 
             rows = cursor.fetchall()
 
-        return [row[0] for row in rows]
-
-        
+        return [
+            row[0]
+            for row in rows
+        ]

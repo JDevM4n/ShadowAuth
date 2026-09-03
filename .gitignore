@@ -50,3 +50,4 @@ cowrie/etc/*.key
 # ===============================
 datasets/*.csv
 samples/raw/cowrie/live/
+backups/
