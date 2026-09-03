@@ -211,6 +211,8 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools_scm]
+root = ".."
+relative_to = "pyproject.toml"
 version_file = "src/cowrie/_version.py"
 
 [tool.tox]
