@@ -14,7 +14,7 @@ ShadowAuth is the implementation platform for the **M4N Sentinel** research proj
 
 The platform is designed to simulate realistic financial infrastructures, collect attacker telemetry, normalize security events, engineer behavioral features, and train Machine Learning models capable of detecting advanced cyber threats.
 
-Rather than being a single application, ShadowAuth is composed of independent but integrated modules that progressively build a complete behavioral detection platform.
+Rather than being a single application, ShadowAuth is composed of independent but integrated modules that progressively build a complete cybersecurity platform.
 
 ---
 
@@ -88,15 +88,25 @@ ShadowAuth aims to become an open cybersecurity platform capable of:
 ```text
 ShadowAuth/
 │
-├── cowrie/              # Customized SSH honeypot
-├── normalizer/          # Event normalization
-├── parsers/             # Event parsers
-├── ml/                  # Machine Learning
-├── dashboard/           # Visualization
-├── datasets/            # Generated datasets
-├── docs/                # Technical documentation
-├── screenshots/         # Demonstrations
-├── scripts/             # Helper scripts
+├── cowrie/
+│   ├── bootstrap.sh
+│   ├── start.sh
+│   ├── stop.sh
+│   ├── restart.sh
+│   ├── status.sh
+│   ├── logs.sh
+│   ├── jsonlogs.sh
+│   ├── shadowauth/
+│   ├── src/
+│   └── ...
+│
+├── normalizer/
+├── parsers/
+├── ml/
+├── dashboard/
+├── datasets/
+├── docs/
+├── screenshots/
 └── README.md
 ```
 
@@ -111,36 +121,68 @@ git clone https://github.com/JDevM4n/ShadowAuth.git
 cd ShadowAuth/cowrie
 ```
 
-Configure the honeypot:
+Install ShadowAuth:
 
 ```bash
-bash shadowauth/setup.sh
-```
-
-Create the virtual environment:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Install Cowrie:
-
-```bash
-pip install -U pip setuptools setuptools-scm wheel
-pip install -e .
+./bootstrap.sh
 ```
 
 Start the honeypot:
 
 ```bash
-python -m cowrie.scripts.cowrie start
+./start.sh
 ```
 
-Check status:
+Verify that everything is running:
 
 ```bash
-python -m cowrie.scripts.cowrie status
+./status.sh
+```
+
+---
+
+# Project Scripts
+
+Install ShadowAuth
+
+```bash
+./bootstrap.sh
+```
+
+Start the honeypot
+
+```bash
+./start.sh
+```
+
+Stop the honeypot
+
+```bash
+./stop.sh
+```
+
+Restart the honeypot
+
+```bash
+./restart.sh
+```
+
+Check status
+
+```bash
+./status.sh
+```
+
+Follow Cowrie logs
+
+```bash
+./logs.sh
+```
+
+Follow JSON logs
+
+```bash
+./jsonlogs.sh
 ```
 
 ---
@@ -154,10 +196,12 @@ python -m cowrie.scripts.cowrie status
 - ✅ Realistic banking filesystem
 - ✅ Fake authentication infrastructure
 - ✅ SSH banner customization
+- ✅ Reproducible installation
+- ✅ One-step bootstrap installer
+- ✅ Management scripts
 - ✅ Internet deployment
 - ✅ Real attacker telemetry collection
 - ✅ JSON session logging
-- ✅ Reproducible installation
 
 ---
 
@@ -170,8 +214,10 @@ python -m cowrie.scripts.cowrie status
 - [x] Banco Andino customization
 - [x] Financial filesystem
 - [x] SSH customization
+- [x] Runtime automation
+- [x] Bootstrap installer
 - [x] Internet deployment
-- [x] Real attack collection
+- [x] Real attacker telemetry collection
 - [x] Reproducible installation
 
 ---
@@ -229,8 +275,8 @@ python -m cowrie.scripts.cowrie status
 
 - Cowrie
 - Falco
-- OpenSearch *(planned)*
-- Wazuh *(planned)*
+- OpenSearch *(future integration)*
+- Wazuh *(future integration)*
 
 ## Backend
 
@@ -293,10 +339,13 @@ The research investigates the early detection of ransomware and cryptojacking th
 
 Current milestone:
 
-- ✅ Financial SSH honeypot operational
-- ✅ Capturing real attacker telemetry from the Internet
-- 🚧 Integrating Falco
-- 🚧 Building the event normalization pipeline
+- ✅ Customized financial SSH honeypot operational
+- ✅ Internet deployment completed
+- ✅ Capturing real attacker telemetry
+- ✅ Reproducible installation
+- ✅ One-command bootstrap installation
+- 🚧 Falco integration
+- 🚧 Event normalization pipeline
 - 🚧 PostgreSQL persistence layer
 - 🚧 Feature engineering
 - 🚧 Behavioral Machine Learning
@@ -313,4 +362,4 @@ Bug reports, discussions, ideas, and technical feedback are welcome.
 
 # License
 
-An open-source license will be added before the first stable release.
+An open-source license will be added before the first public stable release.
