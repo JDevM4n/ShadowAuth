@@ -1,11 +1,11 @@
 import pandas as pd
 
-from shadowauth.dataset.dataset_validator import (
-    DatasetValidator,
+from shadowauth.ml.dataset_splitter import (
+    DatasetSplitter,
 )
 
 
-def create_valid_dataset():
+def create_dataset():
 
     rows = []
 
@@ -45,11 +45,11 @@ def create_valid_dataset():
     return pd.DataFrame(rows)
 
 
-def test_dataset_validator(
+def test_dataset_splitter(
     tmp_path,
 ):
 
-    dataset = create_valid_dataset()
+    dataset = create_dataset()
 
     dataset_path = (
         tmp_path / "dataset.csv"
@@ -60,28 +60,56 @@ def test_dataset_validator(
         index=False,
     )
 
-    validator = DatasetValidator(
+    splitter = DatasetSplitter(
         str(dataset_path)
     )
 
-    assert validator.validate_columns()
+    (
+        x_train,
+        x_test,
+        y_train,
+        y_test,
+    ) = splitter.split()
 
-    assert validator.validate_nulls()
+    assert len(x_train) == 16
 
-    assert validator.validate_session_ids()
+    assert len(x_test) == 4
 
-    assert validator.validate_ranges()
+    assert len(y_train) == 16
 
-    assert validator.validate_sample_count()
+    assert len(y_test) == 4
 
-    assert validator.validate_labels()
+    assert (
+        "session_id"
+        not in x_train.columns
+    )
+
+    assert (
+        "source_ip"
+        not in x_train.columns
+    )
+
+    assert (
+        "destination_ip"
+        not in x_train.columns
+    )
+
+    assert (
+        "protocol"
+        not in x_train.columns
+    )
+
+    assert (
+        "label"
+        not in x_train.columns
+    )
 
 
-def test_validator_rejects_unlabeled(
+def test_splitter_rejects_unlabeled(
     tmp_path,
 ):
 
-    dataset = create_valid_dataset()
+    dataset = create_dataset()
 
     dataset.loc[
         0,
@@ -97,11 +125,20 @@ def test_validator_rejects_unlabeled(
         index=False,
     )
 
-    validator = DatasetValidator(
+    splitter = DatasetSplitter(
         str(dataset_path)
     )
 
-    assert (
-        validator.validate_labels()
-        is False
-    )
+    try:
+
+        splitter.split()
+
+        assert False, (
+            "Expected ValueError"
+        )
+
+    except ValueError as error:
+
+        assert "unlabeled" in str(
+            error
+        ).lower()

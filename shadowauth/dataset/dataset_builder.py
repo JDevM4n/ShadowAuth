@@ -15,6 +15,31 @@ class DatasetBuilder:
 
         self.extractor = SessionFeatureExtractor()
 
+    def _resolve_label(self, events) -> str:
+        """
+        Resolves the label associated with a session.
+
+        Sessions without an explicit label are kept as
+        'unlabeled' instead of being automatically classified
+        as attacks.
+        """
+
+        labels = {
+            event.label
+            for event in events
+            if event.label
+        }
+
+        if not labels:
+            return "unlabeled"
+
+        if len(labels) > 1:
+            raise ValueError(
+                f"Session contains conflicting labels: {labels}"
+            )
+
+        return next(iter(labels))
+
     def build(self):
 
         dataset = []
@@ -23,18 +48,20 @@ class DatasetBuilder:
 
         for session_id in sessions:
 
-            events = self.repository.get_session(session_id)
+            events = self.repository.get_session(
+                session_id
+            )
+
+            label = self._resolve_label(events)
 
             features = self.extractor.extract(
                 events,
-                label="attack",
+                label=label,
             )
 
-            feature_dict = features.model_dump()
-
-            feature_dict.pop("session_id", None)
-
-            dataset.append(feature_dict)
+            dataset.append(
+                features.model_dump()
+            )
 
         return dataset
 
@@ -48,7 +75,6 @@ class DatasetBuilder:
         if not dataset:
 
             print("Dataset is empty.")
-
             return
 
         Path(output_path).parent.mkdir(
@@ -60,6 +86,7 @@ class DatasetBuilder:
             output_path,
             "w",
             newline="",
+            encoding="utf-8",
         ) as csv_file:
 
             writer = csv.DictWriter(
@@ -71,4 +98,6 @@ class DatasetBuilder:
 
             writer.writerows(dataset)
 
-        print(f"Dataset exported to {output_path}")
+        print(
+            f"Dataset exported to {output_path}"
+        )

@@ -49,3 +49,4 @@ cowrie/etc/*.key
 # Generated datasets
 # ===============================
 datasets/*.csv
+samples/raw/cowrie/live/
