@@ -9,3 +9,4 @@ typing_extensions==4.16.0
 pandas
 scikit-learn
 xgboost==3.4.1
+joblib==1.5.3
