@@ -343,3 +343,118 @@ class PostgresRepository:
             row[0]
             for row in rows
         ]
+    def save_ml_score(
+        self,
+        session_id: str,
+        model_name: str,
+        model_version: str,
+        prediction: str,
+        attack_probability: float | None = None,
+        anomaly_score: float | None = None,
+        artifact_path: str | None = None,
+        metadata: dict | None = None,
+    ) -> None:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                INSERT INTO ml_scores (
+                    session_id,
+                    model_name,
+                    model_version,
+                    prediction,
+                    attack_probability,
+                    anomaly_score,
+                    artifact_path,
+                    metadata
+                )
+
+                VALUES (
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+
+                ON CONFLICT (
+                    session_id,
+                    model_name,
+                    model_version
+                )
+
+                DO UPDATE SET
+                    prediction = EXCLUDED.prediction,
+                    attack_probability = EXCLUDED.attack_probability,
+                    anomaly_score = EXCLUDED.anomaly_score,
+                    artifact_path = EXCLUDED.artifact_path,
+                    metadata = EXCLUDED.metadata,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    session_id,
+                    model_name,
+                    model_version,
+                    prediction,
+                    attack_probability,
+                    anomaly_score,
+                    artifact_path,
+                    Jsonb(metadata or {}),
+                ),
+            )
+
+        self.connection.commit()
+
+    def get_ml_score(
+        self,
+        session_id: str,
+        model_name: str,
+        model_version: str,
+    ) -> dict | None:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT
+                    score_id,
+                    session_id,
+                    model_name,
+                    model_version,
+                    prediction,
+                    attack_probability,
+                    anomaly_score,
+                    artifact_path,
+                    metadata,
+                    created_at,
+                    updated_at
+
+                FROM ml_scores
+
+                WHERE session_id = %s
+                  AND model_name = %s
+                  AND model_version = %s
+                """,
+                (
+                    session_id,
+                    model_name,
+                    model_version,
+                ),
+            )
+
+            row = cursor.fetchone()
+
+        if row is None:
+            return None
+
+        return {
+            "score_id": row[0],
+            "session_id": row[1],
+            "model_name": row[2],
+            "model_version": row[3],
+            "prediction": row[4],
+            "attack_probability": row[5],
+            "anomaly_score": row[6],
+            "artifact_path": row[7],
+            "metadata": row[8],
+            "created_at": row[9],
+            "updated_at": row[10],
+        }

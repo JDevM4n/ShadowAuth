@@ -53,4 +53,4 @@ class FeatureVector(BaseModel):
 
     # ---------- Machine Learning ----------
 
-    label: str = "attack"
+    label: str = "unlabeled"
