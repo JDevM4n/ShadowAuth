@@ -3,19 +3,28 @@ from abc import ABC, abstractmethod
 
 class ModelTrainer(ABC):
     """
-    Base class for all Machine Learning trainers.
+    Base interface for ShadowAuth
+    Machine Learning trainers.
     """
 
     @abstractmethod
-    def train(self):
+    def train(
+        self,
+        x_train,
+        y_train,
+    ):
         """
-        Train the machine learning model.
+        Train the Machine Learning model.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def predict(self):
+    def predict(
+        self,
+        x,
+    ):
         """
-        Predict using the trained model.
+        Generate predictions using
+        the trained model.
         """
-        pass
+        raise NotImplementedError

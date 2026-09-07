@@ -10,11 +10,13 @@ class DatasetSplitter:
     """
 
     METADATA_COLUMNS = [
-        "session_id",
-        "source_ip",
-        "destination_ip",
-        "protocol",
-    ]
+    "session_id",
+    "source_ip",
+    "destination_ip",
+    "source_port",
+    "destination_port",
+    "protocol",
+]
 
     def __init__(
         self,
