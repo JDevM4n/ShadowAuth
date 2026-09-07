@@ -8,3 +8,4 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 pandas
 scikit-learn
+xgboost==3.4.1
