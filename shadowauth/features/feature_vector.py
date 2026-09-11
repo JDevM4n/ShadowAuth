@@ -19,6 +19,22 @@ class FeatureVector(BaseModel):
 
     download_count: int
 
+    # ---------- Behavioral threat indicators ----------
+
+    failed_login_count: int = 0
+
+    download_command_count: int = 0
+
+    executable_permission_count: int = 0
+
+    ransomware_extension_count: int = 0
+
+    ransom_note_count: int = 0
+
+    cpu_recon_count: int = 0
+
+    cryptomining_indicator_count: int = 0
+
     # ---------- Network ----------
 
     source_ip: str | None = None

@@ -68,6 +68,20 @@ class SessionFeatureExtractor(FeatureExtractor):
 
             download_count=self._count_downloads(events),
 
+            failed_login_count=self._count_failed_logins(events),
+
+            download_command_count=self._count_download_commands(events),
+
+            executable_permission_count=self._count_executable_permissions(events),
+
+            ransomware_extension_count=self._count_ransomware_extensions(events),
+
+            ransom_note_count=self._count_ransom_notes(events),
+
+            cpu_recon_count=self._count_cpu_recon(events),
+
+            cryptomining_indicator_count=self._count_cryptomining_indicators(events),
+
             # ---------- Network ----------
 
             source_ip=first_event.network.source_ip,
@@ -169,6 +183,174 @@ class SessionFeatureExtractor(FeatureExtractor):
             for event in events
             if event.event_type == "cowrie.session.file_download"
         )
+
+    def _behavior_commands(
+        self,
+        events: list[NormalizedEvent],
+    ) -> list[str]:
+        """
+        Return Cowrie commands used for behavioral analysis.
+
+        Ground-truth marker commands are intentionally excluded
+        to prevent label leakage into machine-learning features.
+        """
+
+        commands = []
+
+        for event in events:
+
+            if event.event_type != "cowrie.command.input":
+                continue
+
+            command = str(
+                event.data.get("input", "")
+            ).strip()
+
+            if not command:
+                continue
+
+            if "shadowauth_controlled_" in command.lower():
+                continue
+
+            commands.append(
+                command.lower()
+            )
+
+        return commands
+
+    def _count_failed_logins(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        return sum(
+            1
+            for event in events
+            if event.event_type == "cowrie.login.failed"
+        )
+
+    def _count_download_commands(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        indicators = (
+            "wget",
+            "curl",
+            "scp ",
+            "tftp",
+        )
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if any(
+                indicator in command
+                for indicator in indicators
+            )
+        )
+
+    def _count_executable_permissions(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if (
+                "chmod +x" in command
+                or "chmod 755" in command
+                or "chmod 777" in command
+            )
+        )
+
+    def _count_ransomware_extensions(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        indicators = (
+            ".locked",
+            ".encrypted",
+            ".enc",
+        )
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if any(
+                indicator in command
+                for indicator in indicators
+            )
+        )
+
+    def _count_ransom_notes(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        indicators = (
+            "recover_files",
+            "restore_files",
+            "readme_restore",
+            "ransom_note",
+            "decrypt",
+        )
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if any(
+                indicator in command
+                for indicator in indicators
+            )
+        )
+
+    def _count_cpu_recon(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        indicators = (
+            "nproc",
+            "/proc/cpuinfo",
+            "lscpu",
+            "free -m",
+            "free -h",
+        )
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if any(
+                indicator in command
+                for indicator in indicators
+            )
+        )
+
+    def _count_cryptomining_indicators(
+        self,
+        events: list[NormalizedEvent],
+    ) -> int:
+
+        indicators = (
+            "xmrig",
+            "stratum",
+            "--wallet",
+            "--pool",
+            "test_wallet",
+        )
+
+        return sum(
+            1
+            for command in self._behavior_commands(events)
+            if any(
+                indicator in command
+                for indicator in indicators
+            )
+        )
+
 
     def _count_processes(
         self,
