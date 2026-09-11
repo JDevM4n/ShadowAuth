@@ -458,3 +458,130 @@ class PostgresRepository:
             "created_at": row[9],
             "updated_at": row[10],
         }
+
+    def save_correlation_result(
+        self,
+        session_id: str,
+        rule_id: str,
+        rule_name: str,
+        severity: str,
+        score: float,
+        threat_type: str,
+        description: str,
+        evidence: dict | None,
+        model_name: str,
+        model_version: str,
+    ) -> None:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                INSERT INTO correlation_results (
+
+                    session_id,
+                    rule_id,
+                    rule_name,
+                    severity,
+                    score,
+                    threat_type,
+                    description,
+                    evidence,
+                    model_name,
+                    model_version
+
+                )
+
+                VALUES (
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s
+                )
+
+                ON CONFLICT (
+                    session_id,
+                    rule_id,
+                    model_name,
+                    model_version
+                )
+
+                DO UPDATE SET
+
+                    rule_name = EXCLUDED.rule_name,
+                    severity = EXCLUDED.severity,
+                    score = EXCLUDED.score,
+                    threat_type = EXCLUDED.threat_type,
+                    description = EXCLUDED.description,
+                    evidence = EXCLUDED.evidence,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    session_id,
+                    rule_id,
+                    rule_name,
+                    severity,
+                    score,
+                    threat_type,
+                    description,
+                    Jsonb(evidence or {}),
+                    model_name,
+                    model_version,
+                ),
+            )
+
+        self.connection.commit()
+
+    def get_correlation_results(
+        self,
+        session_id: str,
+    ) -> list[dict]:
+
+        with self.connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT
+                    correlation_id,
+                    session_id,
+                    rule_id,
+                    rule_name,
+                    severity,
+                    score,
+                    threat_type,
+                    description,
+                    evidence,
+                    model_name,
+                    model_version,
+                    created_at,
+                    updated_at
+
+                FROM correlation_results
+
+                WHERE session_id = %s
+
+                ORDER BY score DESC, created_at
+                """,
+                (
+                    session_id,
+                ),
+            )
+
+            rows = cursor.fetchall()
+
+        return [
+            {
+                "correlation_id": row[0],
+                "session_id": row[1],
+                "rule_id": row[2],
+                "rule_name": row[3],
+                "severity": row[4],
+                "score": row[5],
+                "threat_type": row[6],
+                "description": row[7],
+                "evidence": row[8],
+                "model_name": row[9],
+                "model_version": row[10],
+                "created_at": row[11],
+                "updated_at": row[12],
+            }
+            for row in rows
+        ]
