@@ -17,7 +17,7 @@ class CorrelationContextBuilder:
         repository=None,
         extractor=None,
         model_name: str = "random_forest",
-        model_version: str = "v1",
+        model_version: str = "2.0",
     ):
 
         self.repository = (
