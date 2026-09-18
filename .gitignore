@@ -52,3 +52,4 @@ datasets/*.csv
 samples/raw/cowrie/live/
 backups/
 models/*.joblib
+samples/raw/falco/live/
