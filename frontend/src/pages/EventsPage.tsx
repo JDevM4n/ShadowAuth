@@ -5,11 +5,21 @@ import {
   Search,
 } from "lucide-react";
 
-import { getEvents } from "../services/api";
-import type { SecurityEvent } from "../types/api";
+import LoadingScreen from "../components/LoadingScreen";
+
+import {
+  getEvents,
+  withMinimumDelay,
+} from "../services/api";
+
+import type {
+  SecurityEvent,
+} from "../types/api";
 
 
 type SourceFilter = "" | "cowrie" | "falco";
+
+const MINIMUM_LOADING_TIME = 3000;
 
 
 export default function EventsPage() {
@@ -31,15 +41,18 @@ export default function EventsPage() {
 
   async function loadEvents() {
     setLoading(true);
+    setError(null);
 
     try {
-      const data = await getEvents(
-        100,
-        source || undefined,
+      const data = await withMinimumDelay(
+        getEvents(
+          100,
+          source || undefined,
+        ),
+        MINIMUM_LOADING_TIME,
       );
 
       setEvents(data);
-      setError(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -55,9 +68,12 @@ export default function EventsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    getEvents(
-      100,
-      source || undefined,
+    withMinimumDelay(
+      getEvents(
+        100,
+        source || undefined,
+      ),
+      MINIMUM_LOADING_TIME,
     )
       .then((data) => {
         if (!cancelled) {
@@ -87,7 +103,8 @@ export default function EventsPage() {
 
 
   const filteredEvents = useMemo(() => {
-    const value = search.toLowerCase();
+    const value =
+      search.trim().toLowerCase();
 
     return events.filter((event) => {
       return (
@@ -105,6 +122,16 @@ export default function EventsPage() {
   }, [events, search]);
 
 
+  if (loading) {
+    return (
+      <LoadingScreen
+        title="Loading security events"
+        message="Retrieving normalized Cowrie and Falco telemetry."
+      />
+    );
+  }
+
+
   return (
     <div className="data-page">
       <header className="page-header">
@@ -120,6 +147,7 @@ export default function EventsPage() {
             security events.
           </p>
         </div>
+
 
         <button
           className="refresh-button"
@@ -159,14 +187,13 @@ export default function EventsPage() {
 
             <input
               value={search}
-              placeholder={
-                "Search event type or session..."
-              }
+              placeholder="Search event type or session..."
               onChange={(event) =>
                 setSearch(event.target.value)
               }
             />
           </div>
+
 
           <div className="event-counter">
             {filteredEvents.length}
@@ -176,13 +203,6 @@ export default function EventsPage() {
         </div>
 
 
-        {loading && (
-          <div className="table-state">
-            Loading events...
-          </div>
-        )}
-
-
         {error && (
           <div className="table-state error">
             {error}
@@ -190,7 +210,7 @@ export default function EventsPage() {
         )}
 
 
-        {!loading && !error && (
+        {!error && (
           <div className="table-wrapper">
             <table className="security-table">
               <thead>
@@ -218,6 +238,7 @@ export default function EventsPage() {
                         </span>
                       </td>
 
+
                       <td>
                         <div className="event-name">
                           <Activity size={14} />
@@ -227,22 +248,26 @@ export default function EventsPage() {
                         </div>
                       </td>
 
+
                       <td>
                         {event.severity_native ??
                           event.severity ??
                           "—"}
                       </td>
 
+
                       <td className="mono-cell">
                         {event.session_id ??
                           "—"}
                       </td>
+
 
                       <td>
                         {getHostDescription(
                           event
                         )}
                       </td>
+
 
                       <td>
                         {formatDate(
@@ -317,5 +342,7 @@ function getHostDescription(
 function formatDate(
   value: string,
 ) {
-  return new Date(value).toLocaleString();
+  return new Date(
+    value
+  ).toLocaleString();
 }

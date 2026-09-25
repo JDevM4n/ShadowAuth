@@ -6,8 +6,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import { getMLScores } from "../services/api";
-import type { MLScore } from "../types/api";
+import LoadingScreen from "../components/LoadingScreen";
+
+import {
+  getMLScores,
+  withMinimumDelay,
+} from "../services/api";
+
+import type {
+  MLScore,
+} from "../types/api";
+
+
+const MINIMUM_LOADING_TIME = 3000;
 
 
 export default function MachineLearningPage() {
@@ -23,19 +34,21 @@ export default function MachineLearningPage() {
 
   async function loadScores() {
     setLoading(true);
+    setError(null);
 
     try {
-      const data = await getMLScores(500);
-
-      setScores(
-        data.filter(
-          (score) =>
-            score.model_name === "random_forest" &&
-            score.model_version === "2.0"
-        )
+      const data = await withMinimumDelay(
+        getMLScores(500),
+        MINIMUM_LOADING_TIME,
       );
 
-      setError(null);
+      const filteredScores = data.filter(
+        (score) =>
+          score.model_name === "random_forest" &&
+          score.model_version === "2.0"
+      );
+
+      setScores(filteredScores);
     } catch (err) {
       setError(
         err instanceof Error
@@ -51,17 +64,19 @@ export default function MachineLearningPage() {
   useEffect(() => {
     let cancelled = false;
 
-    getMLScores(500)
+    withMinimumDelay(
+      getMLScores(500),
+      MINIMUM_LOADING_TIME,
+    )
       .then((data) => {
         if (!cancelled) {
-          setScores(
-            data.filter(
-              (score) =>
-                score.model_name === "random_forest" &&
-                score.model_version === "2.0"
-            )
+          const filteredScores = data.filter(
+            (score) =>
+              score.model_name === "random_forest" &&
+              score.model_version === "2.0"
           );
 
+          setScores(filteredScores);
           setError(null);
         }
       })
@@ -110,10 +125,10 @@ export default function MachineLearningPage() {
     const averageProbability =
       probabilities.length > 0
         ? probabilities.reduce(
-          (total, value) =>
-            total + value,
-          0
-        ) / probabilities.length
+            (total, value) =>
+              total + value,
+            0
+          ) / probabilities.length
         : 0;
 
     return {
@@ -122,6 +137,25 @@ export default function MachineLearningPage() {
       averageProbability,
     };
   }, [scores]);
+
+
+  if (loading) {
+    return (
+      <LoadingScreen
+        title="Loading detection model"
+        message="Retrieving Random Forest v2.0 inference results and prediction metrics."
+      />
+    );
+  }
+
+
+  if (error) {
+    return (
+      <div className="table-state error">
+        {error}
+      </div>
+    );
+  }
 
 
   return (
@@ -139,6 +173,7 @@ export default function MachineLearningPage() {
             Random Forest v2.0.
           </p>
         </div>
+
 
         <button
           className="refresh-button"
@@ -158,6 +193,7 @@ export default function MachineLearningPage() {
           icon={<Brain size={20} />}
         />
 
+
         <MLCard
           label="Persisted scores"
           value={scores.length}
@@ -165,12 +201,14 @@ export default function MachineLearningPage() {
           icon={<Brain size={20} />}
         />
 
+
         <MLCard
           label="Attack predictions"
           value={summary.attack}
           detail="Sessions predicted attack"
           icon={<ShieldAlert size={20} />}
         />
+
 
         <MLCard
           label="Benign predictions"
@@ -196,6 +234,7 @@ export default function MachineLearningPage() {
           </strong>
         </div>
 
+
         <div>
           <span className="ml-info-label">
             Production candidate
@@ -209,93 +248,86 @@ export default function MachineLearningPage() {
 
 
       <section className="table-panel">
-        {loading && (
-          <div className="table-state">
-            Loading ML scores...
-          </div>
-        )}
+        <div className="table-wrapper">
+          <table className="security-table">
+            <thead>
+              <tr>
+                <th>Session</th>
+                <th>Prediction</th>
+                <th>Attack probability</th>
+                <th>Model</th>
+                <th>Version</th>
+                <th>Ground truth</th>
+              </tr>
+            </thead>
 
-        {error && (
-          <div className="table-state error">
-            {error}
-          </div>
-        )}
 
-        {!loading && !error && (
-          <div className="table-wrapper">
-            <table className="security-table">
-              <thead>
-                <tr>
-                  <th>Session</th>
-                  <th>Prediction</th>
-                  <th>Attack probability</th>
-                  <th>Model</th>
-                  <th>Version</th>
-                  <th>Ground truth</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {scores.map((score) => {
-                  const groundTruth =
-                    typeof score.metadata
-                      .ground_truth ===
-                      "string"
-                      ? score.metadata
+            <tbody>
+              {scores.map((score) => {
+                const groundTruth =
+                  typeof score.metadata
+                    .ground_truth ===
+                  "string"
+                    ? score.metadata
                         .ground_truth
-                      : "—";
+                    : "—";
 
-                  return (
-                    <tr key={score.score_id}>
-                      <td className="mono-cell">
-                        {score.session_id}
-                      </td>
+                return (
+                  <tr key={score.score_id}>
+                    <td className="mono-cell">
+                      {score.session_id}
+                    </td>
 
-                      <td>
-                        <span
-                          className={
-                            `label-badge ${score.prediction}`
-                          }
-                        >
-                          {score.prediction}
-                        </span>
-                      </td>
 
-                      <td>
-                        {score.attack_probability !==
-                          null
-                          ? `${(
+                    <td>
+                      <span
+                        className={
+                          `label-badge ${score.prediction}`
+                        }
+                      >
+                        {score.prediction}
+                      </span>
+                    </td>
+
+
+                    <td>
+                      {score.attack_probability !==
+                      null
+                        ? `${(
                             score.attack_probability *
                             100
                           ).toFixed(1)}%`
-                          : "—"}
-                      </td>
+                        : "—"}
+                    </td>
 
-                      <td>
-                        {score.model_name}
-                      </td>
 
-                      <td>
-                        {score.model_version}
-                      </td>
+                    <td>
+                      {score.model_name}
+                    </td>
 
-                      <td>
-                        {groundTruth}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
 
-            {scores.length === 0 && (
-              <div className="table-state">
-                No Random Forest v2.0
-                inference scores found.
-              </div>
-            )}
-          </div>
-        )}
+                    <td>
+                      {score.model_version}
+                    </td>
+
+
+                    <td>
+                      {groundTruth}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+
+          {scores.length === 0 && (
+            <div className="table-state">
+              No Random Forest v2.0
+              inference scores found.
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
@@ -316,16 +348,20 @@ function MLCard({
   return (
     <article className="stat-card">
       <div className="stat-card-top">
-        <span>{label}</span>
+        <span>
+          {label}
+        </span>
 
         <div className="stat-icon">
           {icon}
         </div>
       </div>
 
+
       <strong className="ml-card-value">
         {value}
       </strong>
+
 
       <span className="stat-subtitle">
         {detail}

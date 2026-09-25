@@ -5,8 +5,19 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
-import { getSessions } from "../services/api";
-import type { Session } from "../types/api";
+import LoadingScreen from "../components/LoadingScreen";
+
+import {
+  getSessions,
+  withMinimumDelay,
+} from "../services/api";
+
+import type {
+  Session,
+} from "../types/api";
+
+
+const MINIMUM_LOADING_TIME = 3000;
 
 
 export default function SessionsPage() {
@@ -28,15 +39,18 @@ export default function SessionsPage() {
 
   async function loadSessions() {
     setLoading(true);
+    setError(null);
 
     try {
-      const data = await getSessions(
-        100,
-        label || undefined,
+      const data = await withMinimumDelay(
+        getSessions(
+          100,
+          label || undefined,
+        ),
+        MINIMUM_LOADING_TIME,
       );
 
       setSessions(data);
-      setError(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -52,9 +66,12 @@ export default function SessionsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    getSessions(
-      100,
-      label || undefined,
+    withMinimumDelay(
+      getSessions(
+        100,
+        label || undefined,
+      ),
+      MINIMUM_LOADING_TIME,
     )
       .then((data) => {
         if (!cancelled) {
@@ -87,8 +104,20 @@ export default function SessionsPage() {
     sessions.filter((session) =>
       session.session_id
         .toLowerCase()
-        .includes(search.toLowerCase())
+        .includes(
+          search.trim().toLowerCase()
+        )
     );
+
+
+  if (loading) {
+    return (
+      <LoadingScreen
+        title="Loading sessions"
+        message="Retrieving observed SSH sessions and classification information."
+      />
+    );
+  }
 
 
   return (
@@ -106,6 +135,7 @@ export default function SessionsPage() {
             by ShadowAuth.
           </p>
         </div>
+
 
         <button
           className="refresh-button"
@@ -132,6 +162,7 @@ export default function SessionsPage() {
             />
           </div>
 
+
           <select
             value={label}
             onChange={(event) =>
@@ -157,13 +188,6 @@ export default function SessionsPage() {
         </div>
 
 
-        {loading && (
-          <div className="table-state">
-            Loading sessions...
-          </div>
-        )}
-
-
         {error && (
           <div className="table-state error">
             {error}
@@ -171,7 +195,7 @@ export default function SessionsPage() {
         )}
 
 
-        {!loading && !error && (
+        {!error && (
           <div className="table-wrapper">
             <table className="security-table">
               <thead>
@@ -186,29 +210,29 @@ export default function SessionsPage() {
                 </tr>
               </thead>
 
+
               <tbody>
                 {filteredSessions.map(
                   (session) => (
                     <tr key={session.session_id}>
                       <td>
                         <div className="session-id">
-                          <ShieldAlert
-                            size={15}
-                          />
+                          <ShieldAlert size={15} />
 
                           {session.session_id}
                         </div>
                       </td>
 
+
                       <td>
-                        {session.sources.join(
-                          ", "
-                        )}
+                        {session.sources.join(", ")}
                       </td>
+
 
                       <td>
                         {session.event_count}
                       </td>
+
 
                       <td>
                         <span
@@ -220,15 +244,16 @@ export default function SessionsPage() {
                         </span>
                       </td>
 
-                      <td>
-                        {session.attack_type ??
-                          "—"}
-                      </td>
 
                       <td>
-                        {session.data_origin ??
-                          "—"}
+                        {session.attack_type ?? "—"}
                       </td>
+
+
+                      <td>
+                        {session.data_origin ?? "—"}
+                      </td>
+
 
                       <td>
                         {formatDate(
@@ -241,12 +266,12 @@ export default function SessionsPage() {
               </tbody>
             </table>
 
-            {filteredSessions.length ===
-              0 && (
-                <div className="table-state">
-                  No sessions found.
-                </div>
-              )}
+
+            {filteredSessions.length === 0 && (
+              <div className="table-state">
+                No sessions found.
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -40,7 +40,13 @@ export default function AppLayout() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">S</div>
+          <div className="brand-mark">
+            <img
+              src="/logo-shadowauth.png"
+              alt="ShadowAuth logo"
+              className="brand-logo"
+            />
+          </div>
 
           <div>
             <h1>ShadowAuth</h1>

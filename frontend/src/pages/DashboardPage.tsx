@@ -19,8 +19,19 @@ import {
   YAxis,
 } from "recharts";
 
-import { getDashboardSummary } from "../services/api";
-import type { DashboardSummary } from "../types/dashboard";
+import LoadingScreen from "../components/LoadingScreen";
+
+import {
+  getDashboardSummary,
+  withMinimumDelay,
+} from "../services/api";
+
+import type {
+  DashboardSummary,
+} from "../types/dashboard";
+
+
+const MINIMUM_LOADING_TIME = 3000;
 
 
 export default function DashboardPage() {
@@ -35,29 +46,45 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    getDashboardSummary()
+    let cancelled = false;
+
+    withMinimumDelay(
+      getDashboardSummary(),
+      MINIMUM_LOADING_TIME,
+    )
       .then((data) => {
-        setSummary(data);
-        setError(null);
+        if (!cancelled) {
+          setSummary(data);
+          setError(null);
+        }
       })
       .catch((err) => {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Could not load dashboard."
-        );
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Could not load dashboard."
+          );
+        }
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
 
   if (loading) {
     return (
-      <div className="dashboard-state">
-        Loading ShadowAuth data...
-      </div>
+      <LoadingScreen
+        title="Loading dashboard"
+        message="Preparing sessions, telemetry, attack classifications and security metrics."
+      />
     );
   }
 
@@ -108,6 +135,7 @@ export default function DashboardPage() {
             detection data.
           </p>
         </div>
+
 
         <div className="system-status">
           <span className="status-dot" />
@@ -187,13 +215,17 @@ export default function DashboardPage() {
         <article className="panel">
           <div className="panel-header">
             <div>
-              <h3>Detected attack types</h3>
+              <h3>
+                Detected attack types
+              </h3>
 
               <p>
-                Ground-truth labeled attack sessions.
+                Ground-truth labeled attack
+                sessions.
               </p>
             </div>
           </div>
+
 
           <div className="chart-container">
             <ResponsiveContainer
@@ -204,25 +236,51 @@ export default function DashboardPage() {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
+                  stroke="#dbe5ef"
                 />
 
                 <XAxis
                   dataKey="name"
                   tickLine={false}
+                  axisLine={{
+                    stroke: "#cbd5e1",
+                  }}
+                  tick={{
+                    fill: "#64748b",
+                    fontSize: 12,
+                  }}
                 />
 
                 <YAxis
                   allowDecimals={false}
                   tickLine={false}
+                  axisLine={false}
+                  tick={{
+                    fill: "#64748b",
+                    fontSize: 12,
+                  }}
                 />
 
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #dbe5ef",
+                    borderRadius: "10px",
+                    color: "#0f172a",
+                    boxShadow:
+                      "0 10px 30px rgba(15, 23, 42, 0.10)",
+                  }}
+                  labelStyle={{
+                    color: "#0f172a",
+                    fontWeight: 700,
+                  }}
+                />
 
                 <Bar
                   dataKey="value"
                   name="Sessions"
                   radius={[6, 6, 0, 0]}
-                  fill="#38bdf8"
+                  fill="#0ea5e9"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -233,13 +291,16 @@ export default function DashboardPage() {
         <article className="panel">
           <div className="panel-header">
             <div>
-              <h3>Telemetry sources</h3>
+              <h3>
+                Telemetry sources
+              </h3>
 
               <p>
                 Events ingested by source.
               </p>
             </div>
           </div>
+
 
           <div className="source-list">
             {sourceData.map((source) => (
@@ -266,7 +327,9 @@ export default function DashboardPage() {
 
 
           <div className="model-summary">
-            <span>Current detection model</span>
+            <span>
+              Current detection model
+            </span>
 
             <strong>
               {summary.ml.model_name}
@@ -281,11 +344,13 @@ export default function DashboardPage() {
       <section className="panel correlation-panel">
         <div className="panel-header">
           <div>
-            <h3>Correlation activity</h3>
+            <h3>
+              Correlation activity
+            </h3>
 
             <p>
-              Matches produced by the ShadowAuth
-              correlation engine.
+              Matches produced by the
+              ShadowAuth correlation engine.
             </p>
           </div>
 
@@ -296,6 +361,7 @@ export default function DashboardPage() {
           </strong>
         </div>
 
+
         <div className="correlation-types">
           {Object.entries(
             summary.correlations.by_type
@@ -305,7 +371,10 @@ export default function DashboardPage() {
               key={type}
             >
               <span>{type}</span>
-              <strong>{count}</strong>
+
+              <strong>
+                {count}
+              </strong>
             </div>
           ))}
         </div>
@@ -329,18 +398,22 @@ function StatCard({
   return (
     <article className="stat-card">
       <div className="stat-card-top">
-        <span>{title}</span>
+        <span>
+          {title}
+        </span>
 
         <div className="stat-icon">
           {icon}
         </div>
       </div>
 
+
       <strong className="stat-value">
         {typeof value === "number"
           ? value.toLocaleString()
           : value}
       </strong>
+
 
       <span className="stat-subtitle">
         {subtitle}

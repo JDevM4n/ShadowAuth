@@ -5,8 +5,19 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
-import { getCorrelations } from "../services/api";
-import type { CorrelationResult } from "../types/api";
+import LoadingScreen from "../components/LoadingScreen";
+
+import {
+  getCorrelations,
+  withMinimumDelay,
+} from "../services/api";
+
+import type {
+  CorrelationResult,
+} from "../types/api";
+
+
+const MINIMUM_LOADING_TIME = 3000;
 
 
 export default function CorrelationsPage() {
@@ -22,12 +33,15 @@ export default function CorrelationsPage() {
 
   async function loadCorrelations() {
     setLoading(true);
+    setError(null);
 
     try {
-      const data = await getCorrelations(100);
+      const data = await withMinimumDelay(
+        getCorrelations(100),
+        MINIMUM_LOADING_TIME,
+      );
 
       setCorrelations(data);
-      setError(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -43,7 +57,10 @@ export default function CorrelationsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    getCorrelations(100)
+    withMinimumDelay(
+      getCorrelations(100),
+      MINIMUM_LOADING_TIME,
+    )
       .then((data) => {
         if (!cancelled) {
           setCorrelations(data);
@@ -69,6 +86,16 @@ export default function CorrelationsPage() {
       cancelled = true;
     };
   }, []);
+
+
+  if (loading) {
+    return (
+      <LoadingScreen
+        title="Loading correlations"
+        message="Analyzing persisted correlation matches and threat evidence."
+      />
+    );
+  }
 
 
   return (
@@ -116,6 +143,7 @@ export default function CorrelationsPage() {
           </span>
         </article>
 
+
         <article className="stat-card">
           <div className="stat-card-top">
             <span>Ransomware</span>
@@ -140,6 +168,7 @@ export default function CorrelationsPage() {
           </span>
         </article>
 
+
         <article className="stat-card">
           <div className="stat-card-top">
             <span>Cryptojacking</span>
@@ -163,6 +192,7 @@ export default function CorrelationsPage() {
             CORR-004 matches
           </span>
         </article>
+
 
         <article className="stat-card">
           <div className="stat-card-top">
@@ -191,19 +221,14 @@ export default function CorrelationsPage() {
 
 
       <section className="table-panel">
-        {loading && (
-          <div className="table-state">
-            Loading correlations...
-          </div>
-        )}
-
         {error && (
           <div className="table-state error">
             {error}
           </div>
         )}
 
-        {!loading && !error && (
+
+        {!error && (
           <div className="correlation-list">
             {correlations.map((item) => (
               <article
@@ -227,6 +252,7 @@ export default function CorrelationsPage() {
                     </p>
                   </div>
 
+
                   <span
                     className={
                       `severity-badge ${item.severity}`
@@ -236,31 +262,39 @@ export default function CorrelationsPage() {
                   </span>
                 </div>
 
+
                 <div className="correlation-meta">
                   <div>
                     <span>Threat</span>
+
                     <strong>
                       {item.threat_type}
                     </strong>
                   </div>
 
+
                   <div>
                     <span>Session</span>
+
                     <strong className="mono-cell">
                       {item.session_id}
                     </strong>
                   </div>
 
+
                   <div>
                     <span>Score</span>
+
                     <strong>
                       {(item.score * 100).toFixed(0)}
                       %
                     </strong>
                   </div>
 
+
                   <div>
                     <span>Model</span>
+
                     <strong>
                       {item.model_name}
                       {" "}
@@ -268,6 +302,7 @@ export default function CorrelationsPage() {
                     </strong>
                   </div>
                 </div>
+
 
                 <details className="evidence-box">
                   <summary>
@@ -284,6 +319,7 @@ export default function CorrelationsPage() {
                 </details>
               </article>
             ))}
+
 
             {correlations.length === 0 && (
               <div className="table-state">

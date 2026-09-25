@@ -87,3 +87,17 @@ export function getCorrelations(
     `/api/correlations?limit=${limit}`
   );
 }
+
+export async function withMinimumDelay<T>(
+  promise: Promise<T>,
+  milliseconds = 3000,
+): Promise<T> {
+  const [result] = await Promise.all([
+    promise,
+    new Promise<void>((resolve) => {
+      setTimeout(resolve, milliseconds);
+    }),
+  ]);
+
+  return result;
+}
