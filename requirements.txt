@@ -1,5 +1,6 @@
 annotated-types==0.8.0
-joblib==1.5.3fastapi==0.141.1
+joblib==1.5.3
+fastapi==0.141.1
 pandas
 psycopg-binary==3.3.4
 psycopg==3.3.4

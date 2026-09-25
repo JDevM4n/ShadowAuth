@@ -1,32 +1,95 @@
-
-
 services:
 
   postgres:
-
     image: postgres:16
-
     container_name: shadowauth-postgres
 
     restart: unless-stopped
 
     environment:
-
-      POSTGRES_DB: shadowauth
-
-      POSTGRES_USER: shadowauth
-
-      POSTGRES_PASSWORD: shadowauth
+      POSTGRES_DB: ${POSTGRES_DB:-shadowauth}
+      POSTGRES_USER: ${POSTGRES_USER:-shadowauth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shadowauth}
 
     ports:
-
       - "5432:5432"
 
     volumes:
-
       - postgres_data:/var/lib/postgresql/data
 
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+
+      - ./docker/postgres/migrations/002_create_sessions.sql:/docker-entrypoint-initdb.d/002_create_sessions.sql:ro
+
+      - ./docker/postgres/migrations/003_create_ml_scores.sql:/docker-entrypoint-initdb.d/003_create_ml_scores.sql:ro
+
+      - ./docker/postgres/migrations/004_create_correlation_results.sql:/docker-entrypoint-initdb.d/004_create_correlation_results.sql:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-shadowauth} -d ${POSTGRES_DB:-shadowauth}"
+        ]
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+
+    container_name: shadowauth-api
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-shadowauth}
+      POSTGRES_USER: ${POSTGRES_USER:-shadowauth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shadowauth}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8000:8000"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+        ]
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+
+    container_name: shadowauth-frontend
+
+    restart: unless-stopped
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+    ports:
+      - "3000:80"
+
 
 volumes:
 
