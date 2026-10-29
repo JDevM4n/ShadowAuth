@@ -1,11 +1,20 @@
 import {
   Activity,
+  BellRing,
+  Database,
+  FileText,
   Brain,
   LayoutDashboard,
-  Link2,
+  Siren,
+  Server,
   Shield,
 } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+
+import {
+  NavLink,
+  Outlet,
+} from "react-router-dom";
+
 
 const links = [
   {
@@ -24,16 +33,37 @@ const links = [
     icon: Activity,
   },
   {
+    to: "/honeypots",
+    label: "Honeypots",
+    icon: Server,
+  },
+  {
     to: "/ml",
     label: "Machine Learning",
     icon: Brain,
   },
   {
-    to: "/correlations",
-    label: "Correlations",
-    icon: Link2,
+    to: "/alerts",
+    label: "Security Alerts",
+    icon: BellRing,
+  },
+  {
+    to: "/incidents",
+    label: "Incidents",
+    icon: Siren,
+  },
+  {
+    to: "/reports",
+    label: "Reports",
+    icon: FileText,
+  },
+  {
+    to: "/sources",
+    label: "Event Sources",
+    icon: Database,
   },
 ];
+
 
 export default function AppLayout() {
   return (
@@ -50,25 +80,42 @@ export default function AppLayout() {
 
           <div>
             <h1>ShadowAuth</h1>
-            <span>Threat Detection Platform</span>
+
+            <span>
+              Threat Detection Platform
+            </span>
           </div>
         </div>
 
+
         <nav>
-          {links.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {links.map(
+            ({
+              to,
+              label,
+              icon: Icon,
+            }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={
+                  ({ isActive }) =>
+                    isActive
+                      ? "nav-link active"
+                      : "nav-link"
+                }
+              >
+                <Icon size={18} />
+
+                <span>
+                  {label}
+                </span>
+              </NavLink>
+            )
+          )}
         </nav>
       </aside>
+
 
       <main className="main-content">
         <Outlet />

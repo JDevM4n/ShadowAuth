@@ -10,11 +10,20 @@ from shadowauth.api.routes.dashboard import (
 from shadowauth.api.routes.events import (
     router as events_router,
 )
+from shadowauth.api.routes.incidents import (
+    router as incidents_router,
+)
 from shadowauth.api.routes.ml import (
     router as ml_router,
 )
 from shadowauth.api.routes.sessions import (
     router as sessions_router,
+)
+from shadowauth.api.routes.sources import (
+    router as sources_router,
+)
+from shadowauth.api.routes.reports import (
+    router as reports_router,
 )
 
 
@@ -52,22 +61,11 @@ def health_check():
     }
 
 
-app.include_router(
-    sessions_router
-)
-
-app.include_router(
-    dashboard_router
-)
-
-app.include_router(
-    events_router
-)
-
-app.include_router(
-    ml_router
-)
-
-app.include_router(
-    correlations_router
-)
+app.include_router(sessions_router)
+app.include_router(dashboard_router)
+app.include_router(events_router)
+app.include_router(ml_router)
+app.include_router(correlations_router)
+app.include_router(incidents_router)
+app.include_router(reports_router)
+app.include_router(sources_router)

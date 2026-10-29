@@ -25,6 +25,8 @@ services:
 
       - ./docker/postgres/migrations/004_create_correlation_results.sql:/docker-entrypoint-initdb.d/004_create_correlation_results.sql:ro
 
+      - ./docker/postgres/migrations/005_create_incidents.sql:/docker-entrypoint-initdb.d/005_create_incidents.sql:ro
+
     healthcheck:
       test:
         [

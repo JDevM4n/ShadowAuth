@@ -55,3 +55,22 @@ export interface CorrelationResult {
   created_at: string;
   updated_at: string;
 }
+
+
+export interface Incident {
+  incident_id: number;
+  correlation_id: number | null;
+  session_id: string;
+  title: string;
+  description: string | null;
+  threat_type: string | null;
+  severity: string;
+  status:
+    | "open"
+    | "investigating"
+    | "resolved";
+  evidence: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+}
